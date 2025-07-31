@@ -7,6 +7,10 @@ on:
       - main
       - 'feature/*'
 
+permissions:
+  id-token: write
+  contents: read
+
 env:
   MONGO_URI: 'mongodb+srv://supercluster.d83jj.mongodb.net/superData'
   MONGO_USERNAME: ${{ vars.MONGO_USERNAME }}
@@ -169,6 +173,15 @@ jobs:
           uses: azure/setup-kubectl@v3
           with:
             version: 'v1.33.0'
+
+        - name: Configure AWS credentials
+          uses: aws-actions/configure-aws-credentials@v4
+          with:
+            role-to-assume: arn:aws:iam::399597048779:role/GitHubActions-EKS-Role
+            aws-region: us-west-1
+        
+        - name: Update kubeconfig for EKS
+          run: aws eks update-kubeconfig --region ca-central-1 --name casual-alternative-badge
 
         - name: Fetch Kubernetes Cluster Details
           run: |
