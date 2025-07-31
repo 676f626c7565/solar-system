@@ -185,6 +185,11 @@ jobs:
         - name: Debug AWS identity
           run: aws sts get-caller-identity
 
+        - name: Test EKS access
+          run: |
+           echo "Testing EKS cluster access..."
+           aws eks describe-cluster --name casual-alternative-badger --region ca-central-1
+
         - name: Fetch Kubernetes Cluster Details
           run: |
             kubectl version
