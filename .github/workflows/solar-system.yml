@@ -177,8 +177,8 @@ jobs:
         - name: Configure AWS credentials
           uses: aws-actions/configure-aws-credentials@v4
           with:
-            role-to-assume: arn:aws:iam::399597048779:role/GitHubActions-EKS-Role
-            aws-region: us-west-1
+            role-to-assume: arn:aws:iam::399597048779:role/GitHUB-Actions
+            aws-region: ca-central-1
         
         - name: Update kubeconfig for EKS
           run: aws eks update-kubeconfig --region ca-central-1 --name casual-alternative-badge
