@@ -7,10 +7,6 @@ on:
       - main
       - 'feature/*'
 
-permissions:
-  id-token: write
-  contents: read
-
 env:
   MONGO_URI: 'mongodb+srv://supercluster.d83jj.mongodb.net/superData'
   MONGO_USERNAME: ${{ vars.MONGO_USERNAME }}
@@ -165,6 +161,9 @@ jobs:
   dev-deploy:
       needs: docker
       runs-on: ubuntu-latest
+      permissions:              # ← Add this permissions block
+        id-token: write         # ← Required for OIDC
+        contents: read    
       steps:
         - name: Checkout Repo
           uses: actions/checkout@v4
