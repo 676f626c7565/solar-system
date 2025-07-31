@@ -182,13 +182,13 @@ jobs:
         - name: Update kubeconfig for EKS
           run: aws eks update-kubeconfig --region ca-central-1 --name casual-alternative-badger
         
-        - name: Debug AWS identity
-          run: aws sts get-caller-identity
+        # - name: Debug AWS identity
+        #   run: aws sts get-caller-identity
 
-        - name: Test EKS access
-          run: |
-           echo "Testing EKS cluster access..."
-           aws eks describe-cluster --name casual-alternative-badger --region ca-central-1
+        # - name: Test EKS access
+        #   run: |
+        #    echo "Testing EKS cluster access..."
+        #    aws eks describe-cluster --name casual-alternative-badger --region ca-central-1
 
         - name: Fetch Kubernetes Cluster Details
           run: |
