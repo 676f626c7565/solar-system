@@ -197,7 +197,7 @@ jobs:
             kubectl get nodes
 
         - name: Replace Token in Manifest Files
-          uses: cschleiden/replace-tokens@v1.3
+          uses: cschleiden/replace-tokens@v1
           with:
             tokenPrefix: '_{_'
             tokenSuffix: '_}_'
