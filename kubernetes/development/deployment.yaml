@@ -17,7 +17,7 @@ spec:
         app: solar-system
     spec:
       containers:
-      - image: _{_IMAGE_}_
+      - image: danilgallagher/solar-system:4a4ff9c98bb8e795e74d411456b266efc7394621
         imagePullPolicy: Always
         name: solar-system
         ports:
