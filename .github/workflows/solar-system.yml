@@ -160,6 +160,11 @@ jobs:
                ghcr.io/${{ github.repository_owner }}/solar-system:${{ github.sha }}
   dev-deploy:
       needs: docker
+      outputs:
+        APP_INGRESS_URL: ${{ steps.set-ingress-host-address.outputs.APP_INGRESS_HOST }}
+      environment: 
+        name: development
+        url: https://${{ steps.set-ingress-host-address.outputs.APP_INGRESS_HOST }}
       runs-on: ubuntu-latest
       permissions:              # ← Add this permissions block
         id-token: write         # ← Required for OIDC
@@ -222,6 +227,24 @@ jobs:
             --dry-run=client \
             -o yaml | kubectl apply -f -
         
-        - name: Deploy to Dev
+        - name: Deploy to Dev Env
           run: |
-            kubectl apply -f kubernetes/development/
+            kubectl apply -f kubernetes/development
+
+        - name: Set App Ingress Host URL
+          id: set-ingress-host-address
+          run: |
+            echo "APP_INGRESS_HOST=$(kubectl -n ${{ vars.NAMESPACE }} get ingress -o jsonpath="{.items[0].spec.tls[0].hosts[0]}")" >> "$GITHUB_OUTPUT"
+
+  integration-testing:
+        name: Dev Integration Testing
+        needs: dev-deploy
+        runs-on: ubuntu-latest
+        steps:
+          - name: Test URL Output using CURL and JQ
+            env:
+              URL: ${{ needs.dev-deploy.outputs.APP_INGRESS_URL }}
+            run: |
+              echo $URL
+              echo "--------------------------------------------"
+              curl https://$URL/live -s -k | jq -r .status | grep -i live
