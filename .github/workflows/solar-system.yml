@@ -239,7 +239,7 @@ jobs:
 
   dev-integration-testing:
         if: contains(github.ref, 'feature/')
-        name: Prod Integration Testing
+        name: Development Integration Testing
         needs: dev-deploy
         runs-on: ubuntu-latest
         steps:
