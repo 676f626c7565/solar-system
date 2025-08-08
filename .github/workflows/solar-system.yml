@@ -279,7 +279,7 @@ jobs:
             aws-region: ca-central-1
         
         - name: Update kubeconfig for EKS
-          run: aws eks update-kubeconfig --region ca-central-1 --name casual-alternative-badger
+          run: echo "aws eks update-kubeconfig --region ca-central-1 --name casual-alternative-badger"
         
         # - name: Debug AWS identity
         #   run: aws sts get-caller-identity
@@ -291,9 +291,9 @@ jobs:
 
         - name: Fetch Kubernetes Cluster Details
           run: |
-            kubectl version
+            echo kubectl version
             echo ---------------------------------------------------
-            kubectl get nodes
+            echo kubectl get nodes
 
         - name: Replace Token in Manifest Files
           uses: cschleiden/replace-tokens@v1
@@ -313,7 +313,7 @@ jobs:
 
         - name: Create MongoDB Secret
           run: |
-            kubectl -n ${{ vars.NAMESPACE }} create secret generic mongo-db-creds \
+            echo kubectl -n ${{ vars.NAMESPACE }} create secret generic mongo-db-creds \
             --from-literal=MONGO_URI=${{ env.MONGO_URI }} \
             --from-literal=MONGO_USERNAME=${{ vars.MONGO_USERNAME }} \
             --from-literal=MONGO_PASSWORD=${{ secrets.MONGO_PASSWORD }} \
