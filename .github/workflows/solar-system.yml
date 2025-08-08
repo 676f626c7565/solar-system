@@ -168,6 +168,8 @@ jobs:
     uses: ./.github/workflows/reuse-deployment.yml
     secrets:
       mongodb-password: ${{ secrets.MONGO_PASSWORD  }}
+    with:
+      mongodb-uri: ${{ vars.MONGO_URI }}
 
   dev-integration-testing:
     if: contains(github.ref, 'feature/')
@@ -192,6 +194,8 @@ jobs:
     uses: ./.github/workflows/reuse-deployment.yml
     secrets:
       mongodb-password: ${{ secrets.MONGO_PASSWORD  }}
+    with:
+      mongodb-uri: ${{ vars.MONGO_URI }}
 
   prod-integration-testing:
     name: Production Integration Testing
