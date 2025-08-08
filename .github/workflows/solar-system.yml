@@ -166,6 +166,8 @@ jobs:
       id-token: write
       contents: read
     uses: ./.github/workflows/reuse-deployment.yml
+    secrets:
+      mongodb-password: ${{ secrets.MONGO_PASSWORD  }}
 
   dev-integration-testing:
     if: contains(github.ref, 'feature/')
@@ -188,6 +190,8 @@ jobs:
       id-token: write
       contents: read
     uses: ./.github/workflows/reuse-deployment.yml
+    secrets:
+      mongodb-password: ${{ secrets.MONGO_PASSWORD  }}
 
   prod-integration-testing:
     name: Production Integration Testing
