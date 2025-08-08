@@ -1,0 +1,85 @@
+name: Deployment - Reusable Workflow
+
+on:
+  workflow_call:
+    outputs:
+      application-url:
+        value: ${{ jobs.deploy.outputs.APP_INGRESS_URL }}
+
+jobs:
+  deploy:
+    outputs:
+      APP_INGRESS_URL: ${{ steps.set-ingress-host-address.outputs.APP_INGRESS_HOST }}
+    environment: 
+      name: development
+      # url: https://${{ steps.set-ingress-host-address.outputs.APP_INGRESS_HOST }}
+    runs-on: ubuntu-latest
+    permissions:              # ← Add this permissions block
+      id-token: write         # ← Required for OIDC
+      contents: read    
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+      
+      - name: Install kubectl CLI
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'v1.33.0'
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::399597048779:role/GitHUB-Actions
+          aws-region: ca-central-1
+      
+      - name: Update kubeconfig for EKS
+        run: aws eks update-kubeconfig --region ca-central-1 --name casual-alternative-badger
+      
+      # - name: Debug AWS identity
+      #   run: aws sts get-caller-identity
+
+      # - name: Test EKS access
+      #   run: |
+      #    echo "Testing EKS cluster access..."
+      #    aws eks describe-cluster --name casual-alternative-badger --region ca-central-1
+
+      - name: Fetch Kubernetes Cluster Details
+        run: |
+          kubectl version
+          echo ---------------------------------------------------
+          kubectl get nodes
+
+      - name: Replace Token in Manifest Files
+        uses: cschleiden/replace-tokens@v1
+        with:
+          tokenPrefix: '_{_'
+          tokenSuffix: '_}_'
+          files: 'kubernetes/development/*.yml'
+        env:
+          NAMESPACE: ${{ vars.NAMESPACE }}
+          REPLICAS: ${{ vars.REPLICAS }}
+          IMAGE: ${{ vars.DOCKERHUB_USERNAME }}/solar-system:${{ github.sha }}
+
+      - name: Check Files
+        run: |
+          cat kubernetes/development/*.yaml
+          echo ${{ vars.DOCKERHUB_USERNAME }}/solar-system:${{ github.sha }}
+
+      - name: Create MongoDB Secret
+        run: |
+          kubectl -n ${{ vars.NAMESPACE }} create secret generic mongo-db-creds \
+          --from-literal=MONGO_URI=${{ env.MONGO_URI }} \
+          --from-literal=MONGO_USERNAME=${{ vars.MONGO_USERNAME }} \
+          --from-literal=MONGO_PASSWORD=${{ secrets.MONGO_PASSWORD }} \
+          --save-config \
+          --dry-run=client \
+          -o yaml | kubectl apply -f -
+      
+      - name: Deploy to Dev Env
+        run: |
+          kubectl apply -f kubernetes/development
+
+      - name: Set App Ingress Host URL
+        id: set-ingress-host-address
+        run: |
+          echo "APP_INGRESS_HOST=$(kubectl -n ${{ vars.NAMESPACE }} get ingress -o jsonpath="{.items[0].spec.tls[0].hosts[0]}")" >> "$GITHUB_OUTPUT"
