@@ -33,7 +33,7 @@ jobs:
           aws-region: ca-central-1
       
       - name: Update kubeconfig for EKS
-        run: aws eks update-kubeconfig --region ca-central-1 --name casual-alternative-badger
+        run: echo "aws eks update-kubeconfig --region ca-central-1 --name casual-alternative-badger"
       
       # - name: Debug AWS identity
       #   run: aws sts get-caller-identity
@@ -45,9 +45,9 @@ jobs:
 
       - name: Fetch Kubernetes Cluster Details
         run: |
-          kubectl version
+          echo "kubectl version"
           echo ---------------------------------------------------
-          kubectl get nodes
+          echo "kubectl get nodes"
 
       - name: Replace Token in Manifest Files
         uses: cschleiden/replace-tokens@v1
@@ -65,19 +65,19 @@ jobs:
           cat kubernetes/development/*.yaml
           echo ${{ vars.DOCKERHUB_USERNAME }}/solar-system:${{ github.sha }}
 
-      - name: Create MongoDB Secret
-        run: |
-          kubectl -n ${{ vars.NAMESPACE }} create secret generic mongo-db-creds \
-          --from-literal=MONGO_URI=${{ env.MONGO_URI }} \
-          --from-literal=MONGO_USERNAME=${{ vars.MONGO_USERNAME }} \
-          --from-literal=MONGO_PASSWORD=${{ secrets.MONGO_PASSWORD }} \
-          --save-config \
-          --dry-run=client \
-          -o yaml | kubectl apply -f -
+    #   - name: Create MongoDB Secret
+    #     run: |
+    #       kubectl -n ${{ vars.NAMESPACE }} create secret generic mongo-db-creds \
+    #       --from-literal=MONGO_URI=${{ env.MONGO_URI }} \
+    #       --from-literal=MONGO_USERNAME=${{ vars.MONGO_USERNAME }} \
+    #       --from-literal=MONGO_PASSWORD=${{ secrets.MONGO_PASSWORD }} \
+    #       --save-config \
+    #       --dry-run=client \
+    #       -o yaml | kubectl apply -f -
       
       - name: Deploy to Dev Env
         run: |
-          kubectl apply -f kubernetes/development
+          echo "kubectl apply -f kubernetes/development"
 
       - name: Set App Ingress Host URL
         id: set-ingress-host-address
