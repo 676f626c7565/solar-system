@@ -144,7 +144,9 @@ jobs:
             --delete \
             --exclude ".*"
           
-          echo "Reports uploaded to: s3://weir-testing-results/reports-${{ github.sha }}/"
+            echo "Uploading to s3"
+            echo "----------------"
+            echo "Reports uploaded to: s3://weir-testing-results/reports-${{ github.sha }}/"
 
   docker:
     name: Containerization
