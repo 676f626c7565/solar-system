@@ -104,6 +104,48 @@ jobs:
           path: coverage
           retention-days: 4
 
+  reports-s3:
+    needs: [code-coverage, unit-testing]
+    name: AWS S3 - Upload Reports
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Download Mocha Test Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: Mocha-Test-Result
+
+      - name: Download Code Coverage Srtifact
+        uses: actions/download-artifact@v4
+        with:
+          name: Code-Coverage-Result
+      
+      - name: Merge Test Files
+        run: |
+            ls -ltr
+            mkdir reports-${{ github.sha }}
+            mv cobertura-coverage.xml reports-${{ github.sha }}/
+            mv test-results.xml reports-${{ github.sha }}/
+            ls -ltr reports-${{ github.sha }}/
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::399597048779:role/GitHUB-Actions
+          aws-region: ca-central-1
+      
+      - name: Upload test reports to S3
+        run: |
+          aws s3 sync reports-${{ github.sha }}/ s3://weir-testing-results/reports-${{ github.sha }}/ \
+            --follow-symlinks \
+            --delete \
+            --exclude ".*"
+          
+          echo "Reports uploaded to: s3://weir-testing-results/reports-${{ github.sha }}/"
+
   docker:
     name: Containerization
     needs: [unit-testing, code-coverage]
