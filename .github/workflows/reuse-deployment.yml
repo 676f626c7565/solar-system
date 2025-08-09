@@ -28,10 +28,10 @@ on:
         required: true
     outputs:
       application-url:
-        value: ${{ jobs.deploy.outputs.APP_INGRESS_URL }}
+        value: google.com
 
 jobs:
-  deploy:
+  reuse-deploy:
     outputs:
       APP_INGRESS_URL: ${{ steps.set-ingress-host-address.outputs.APP_INGRESS_HOST }}
     environment: 
