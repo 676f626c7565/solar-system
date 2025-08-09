@@ -6,6 +6,21 @@ on:
         mongodb-uri:
             required: true
             type: string
+        kubectl-version:
+            description: Provide the required Kubectl version
+            default: v1.33.0
+            required: false
+            type: string
+        k8s-manifest-dir:
+            description: Directory containing Kubernetes manifests files
+            default: kubernetes/
+            required: true
+            type: string 
+        environment:
+            description: Provide the Deployment Environment
+            default: dev
+            required: true
+            type: string
     secrets:
     #   k8s-kubeconfig:
     #     required: true
@@ -20,7 +35,7 @@ jobs:
     outputs:
       APP_INGRESS_URL: ${{ steps.set-ingress-host-address.outputs.APP_INGRESS_HOST }}
     environment: 
-      name: development
+      name: ${{ inputs.environment }}
       # url: https://${{ steps.set-ingress-host-address.outputs.APP_INGRESS_HOST }}
     runs-on: ubuntu-latest
     permissions:              # ← Add this permissions block
@@ -33,7 +48,7 @@ jobs:
       - name: Install kubectl CLI
         uses: azure/setup-kubectl@v3
         with:
-          version: 'v1.33.0'
+          version: '${{ inputs.kubectl-version }}'
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -63,7 +78,7 @@ jobs:
         with:
           tokenPrefix: '_{_'
           tokenSuffix: '_}_'
-          files: 'kubernetes/development/*.yml'
+          files: '[${{ inputs.k8s-manifest-dir }}*.yml]'
         env:
           NAMESPACE: ${{ vars.NAMESPACE }}
           REPLICAS: ${{ vars.REPLICAS }}
@@ -71,7 +86,7 @@ jobs:
 
       - name: Check Files
         run: |
-          cat kubernetes/development/*.yaml
+          cat ${{ inputs.k8s-manifest-dir }}*.yaml
           echo ${{ vars.DOCKERHUB_USERNAME }}/solar-system:${{ github.sha }}
 
     #   - name: Create MongoDB Secret
@@ -86,7 +101,7 @@ jobs:
       
       - name: Deploy to Dev Env
         run: |
-          echo "kubectl apply -f kubernetes/development"
+          echo "kubectl apply -f ${{ inputs.k8s-manifest-dir }}"
 
       - name: Set App Ingress Host URL
         id: set-ingress-host-address
