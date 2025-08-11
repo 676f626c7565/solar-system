@@ -24,10 +24,11 @@ jobs:
       actions: read
       contents: read
       security-events: write
+      id-token: write
     strategy:
       fail-fast: false
       matrix:
-        language: ['javascript']
+        language: ['javascript', 'typescript']
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -44,6 +45,38 @@ jobs:
         uses: github/codeql-action/analyze@v3
         with:
           category: "/language:${{matrix.language}}"
+          upload: false
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::399597048779:role/GitHUB-Actions
+          aws-region: ca-central-1
+
+      - name: Upload CodeQL results to S3
+        run: |
+          # Create directory for CodeQL results
+          mkdir codeql-results-${{ github.sha }}
+          
+          # Copy CodeQL database and results if they exist
+          if [ -d "${{ runner.temp }}/codeql_databases" ]; then
+            cp -r ${{ runner.temp }}/codeql_databases/* codeql-results-${{ github.sha }}/ || echo "No database files to copy"
+          fi
+          
+          # Look for SARIF results files
+          find . -name "*.sarif" -exec cp {} codeql-results-${{ github.sha }}/ \; || echo "No SARIF files found"
+          
+          # Create a summary file
+          echo "CodeQL Analysis Results for commit ${{ github.sha }}" > codeql-results-${{ github.sha }}/analysis-summary.txt
+          echo "Language: ${{ matrix.language }}" >> codeql-results-${{ github.sha }}/analysis-summary.txt
+          echo "Timestamp: $(date)" >> codeql-results-${{ github.sha }}/analysis-summary.txt
+          
+          # Upload to S3
+          aws s3 sync codeql-results-${{ github.sha }}/ s3://weir-testing-results/codeql-results-${{ github.sha }}/ \
+            --follow-symlinks \
+            --exclude ".*"
+          
+          echo "CodeQL results uploaded to: s3://weir-testing-results/codeql-results-${{ github.sha }}/"
 
   unit-testing:
     name: Unit Testing
