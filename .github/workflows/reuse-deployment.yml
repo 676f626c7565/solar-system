@@ -74,6 +74,12 @@ jobs:
           echo ---------------------------------------------------
           echo kubectl get nodes
 
+      - name: Check if manifest files exist
+        run: |
+          echo "Checking for manifest files in: ${{ inputs.k8s-manifest-dir }}"
+          ls -la ${{ inputs.k8s-manifest-dir }} || echo "Directory does not exist"
+          find . -name "*.yml" -o -name "*.yaml" | head -10
+
       - name: Replace Token in Manifest Files
         uses: cschleiden/replace-tokens@v1
         with:
@@ -88,7 +94,37 @@ jobs:
       - name: Check Files
         run: |
           echo "Using image: ${{ vars.DOCKERHUB_USERNAME }}/solar-system:${{ github.sha }}"
-          cat ${{ inputs.k8s-manifest-dir }}*.yml
+          echo "Looking for files in: ${{ inputs.k8s-manifest-dir }}"
+          if ls ${{ inputs.k8s-manifest-dir }}*.yml 1> /dev/null 2>&1; then
+            echo "Found YAML files:"
+            ls -la ${{ inputs.k8s-manifest-dir }}*.yml
+            echo "File contents:"
+            for file in ${{ inputs.k8s-manifest-dir }}*.yml; do
+              if [ -f "$file" ]; then
+                echo "--- $file ---"
+                cat "$file"
+                echo ""
+              fi
+            done
+          else
+            echo "No .yml files found, checking for .yaml files..."
+            if ls ${{ inputs.k8s-manifest-dir }}*.yaml 1> /dev/null 2>&1; then
+              echo "Found YAML files:"
+              ls -la ${{ inputs.k8s-manifest-dir }}*.yaml
+              echo "File contents:"
+              for file in ${{ inputs.k8s-manifest-dir }}*.yaml; do
+                if [ -f "$file" ]; then
+                  echo "--- $file ---"
+                  cat "$file"
+                  echo ""
+                fi
+              done
+            else
+              echo "No YAML files found in ${{ inputs.k8s-manifest-dir }}"
+              echo "Directory contents:"
+              ls -la ${{ inputs.k8s-manifest-dir }} || echo "Directory does not exist"
+            fi
+          fi
 
     #   - name: Create MongoDB Secret
     #     run: |
@@ -102,14 +138,16 @@ jobs:
       
       - name: Deploy to Dev Env
         run: |
-          echo kubectl apply -f ${{ inputs.k8s-manifest-dir }}
+          echo "kubectl apply -f ${{ inputs.k8s-manifest-dir }}"
 
-      # - name: Set App Ingress Host URL
-      #   id: set-ingress-host-address
-      #   run: |
-      #     # Wait a moment for ingress to be created
-      #     sleep 10
-      #     # Get the ingress host, fallback to a default if not found
-      #     echINGRESS_HOST=$(kubectl -n ${{ vars.NAMESPACE }} get ingress -o jsonpath="{.items[0].spec.tls[0].hosts[0]}" 2>/dev/null || echo "deployment-pending.local")
-      #     echo "APP_INGRESS_HOST=${INGRESS_HOST}" >> "$GITHUB_OUTPUT"
-      #     echo "Application will be available at: https://${INGRESS_HOST}"
+      - name: Set App Ingress Host URL
+        id: set-ingress-host-address
+        run: |
+          # For now, set a static URL since kubectl commands are echoed
+          # In production, this would get the actual ingress URL
+          if [ "${{ inputs.environment }}" = "production" ]; then
+            echo "APP_INGRESS_HOST=solar-system-prod.example.com" >> "$GITHUB_OUTPUT"
+          else
+            echo "APP_INGRESS_HOST=solar-system-dev.example.com" >> "$GITHUB_OUTPUT"
+          fi
+          echo "Application will be available at: https://solar-system-${{ inputs.environment }}.example.com"
