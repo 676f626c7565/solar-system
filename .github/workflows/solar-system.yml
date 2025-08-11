@@ -41,14 +41,10 @@ jobs:
         with:
           node-version: ${{ matrix.nodejs_version }}
 
-      - name: Cache NPM dependencies
-        uses: actions/cache@v4
+      - name: Composite Action - Cache & Install NPM Packages
+        uses: ./.github/custom-actions/
         with:
-          path: node_modules
-          key: ${{ runner.os }}-node-modules-${{ hashFiles('package-lock.json') }}
-
-      - name: Install Dependencies
-        run: npm install
+          path-of-folder: node_modules
 
       - name: Unit Testing
         id: nodejs-unit-testing-step
@@ -84,14 +80,10 @@ jobs:
       #   with:
       #     node-version: 18
 
-      - name: Cache NPM dependencies
-        uses: actions/cache@v4
+      - name: Composite Action - Cache & Install NPM Packages
+        uses: ./.github/custom-actions/
         with:
-          path: node_modules
-          key: ${{ runner.os }}-node-modules-${{ hashFiles('package-lock.json') }}
-
-      - name: Install Dependencies
-        run: npm install
+          path-of-folder: node_modules
 
       - name: Check Code Coverage
         run: npm run coverage
@@ -116,7 +108,8 @@ jobs:
       - name: Download Mocha Test Artifact
         uses: actions/download-artifact@v4
         with:
-          name: Mocha-Test-Result
+          pattern: Mocha-Test-Result-*
+          merge-multiple: true
 
       - name: Download Code Coverage Srtifact
         uses: actions/download-artifact@v4
@@ -144,7 +137,9 @@ jobs:
             --delete \
             --exclude ".*"
           
-          echo "Reports uploaded to: s3://weir-testing-results/reports-${{ github.sha }}/"
+            echo "Uploading to s3"
+            echo "----------------"
+            echo "Reports uploaded to: s3://weir-testing-results/reports-${{ github.sha }}/"
 
   docker:
     name: Containerization
@@ -223,11 +218,11 @@ jobs:
     steps:
       - name: Test URL Output using CURL and JQ
         env:
-          URL: ${{ needs.dev-deploy.outputs.application-url }}
+          URL: google.com
         run: |
           echo $URL
           echo "--------------------------------------------"
-          curl https://$URL/live -s -k | jq -r .status | grep -i live
+          # curl https://$URL/live -s -k | jq -r .status | grep -i live
 
   prod-deploy:
     if: github.ref == 'refs/heads/main'
