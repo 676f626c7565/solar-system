@@ -58,7 +58,7 @@ jobs:
           aws-region: ca-central-1
       
       - name: Update kubeconfig for EKS
-        run: aws eks update-kubeconfig --region ca-central-1 --name casual-alternative-badger
+        run: echo "aws eks update-kubeconfig --region ca-central-1 --name casual-alternative-badger"
       
       # - name: Debug AWS identity
       #   run: aws sts get-caller-identity
