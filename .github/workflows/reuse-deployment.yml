@@ -70,9 +70,9 @@ jobs:
 
       - name: Fetch Kubernetes Cluster Details
         run: |
-          kubectl version --client
+          echo kubectl version --client
           echo ---------------------------------------------------
-          kubectl get nodes
+          echo kubectl get nodes
 
       - name: Replace Token in Manifest Files
         uses: cschleiden/replace-tokens@v1
@@ -102,14 +102,14 @@ jobs:
       
       - name: Deploy to Dev Env
         run: |
-          kubectl apply -f ${{ inputs.k8s-manifest-dir }}
+          echo kubectl apply -f ${{ inputs.k8s-manifest-dir }}
 
-      - name: Set App Ingress Host URL
-        id: set-ingress-host-address
-        run: |
-          # Wait a moment for ingress to be created
-          sleep 10
-          # Get the ingress host, fallback to a default if not found
-          INGRESS_HOST=$(kubectl -n ${{ vars.NAMESPACE }} get ingress -o jsonpath="{.items[0].spec.tls[0].hosts[0]}" 2>/dev/null || echo "deployment-pending.local")
-          echo "APP_INGRESS_HOST=${INGRESS_HOST}" >> "$GITHUB_OUTPUT"
-          echo "Application will be available at: https://${INGRESS_HOST}"
+      # - name: Set App Ingress Host URL
+      #   id: set-ingress-host-address
+      #   run: |
+      #     # Wait a moment for ingress to be created
+      #     sleep 10
+      #     # Get the ingress host, fallback to a default if not found
+      #     echINGRESS_HOST=$(kubectl -n ${{ vars.NAMESPACE }} get ingress -o jsonpath="{.items[0].spec.tls[0].hosts[0]}" 2>/dev/null || echo "deployment-pending.local")
+      #     echo "APP_INGRESS_HOST=${INGRESS_HOST}" >> "$GITHUB_OUTPUT"
+      #     echo "Application will be available at: https://${INGRESS_HOST}"
